@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-Training Diffusion Models — ECCV 2026 Tutorial</title>
+    <link rel="icon" type="image/png" sizes="256x256" href="favicon.png?v=2">
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Post-Training Diffusion Models — ECCV 2026 Tutorial">
+    <meta property="og:description" content="A half-day tutorial at ECCV 2026 surveying post-training methods for diffusion models: alignment, enhancement, and control.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Post-Training Diffusion Models — ECCV 2026 Tutorial">
+    <meta name="twitter:description" content="A half-day tutorial at ECCV 2026 on post-training methods for diffusion models.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-primary: #fdfcfa;
+            --bg-secondary: #f7f5f2;
+            --bg-card: #ffffff;
+            --text-primary: #1f1f1f;
+            --text-secondary: #5a5a5a;
+            --text-muted: #888888;
+            --accent: #c9302c;
+            --accent-dark: #a52a27;
+            --accent-light: rgba(201, 48, 44, 0.08);
+            --border-color: #e8e6e3;
+            --border-subtle: #f0eeeb;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.04);
+            --max-width: 1000px;
+            --section-padding: 3.5rem 2rem;
+            --transition: all 0.2s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            padding: 3.5rem 2rem 2.25rem;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+        }
+
+        h1 {
+            font-size: clamp(1.75rem, 4vw, 2.4rem);
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            line-height: 1.3;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .title-underline {
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+            margin: 0.5rem auto 1.25rem;
+            border-radius: 2px;
+        }
+
+        .venue-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.9rem;
+            margin-bottom: 1.25rem;
+            border-radius: 999px;
+            background: var(--accent-light);
+            color: var(--accent-dark);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .venue-badge svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        h2.section-title {
+            font-size: 1.6rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+            position: relative;
+            display: inline-block;
+        }
+
+        h2.section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background: var(--accent);
+            border-radius: 1px;
+        }
+
+        /* ===== AUTHORS ===== */
+        .authors {
+            text-align: center;
+            margin: 0.75rem 0 0.35rem;
+            line-height: 1.8;
+        }
+
+        .authors .author {
+            display: inline-block;
+            margin: 0 0.6rem;
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .authors .author sup {
+            font-size: 0.65rem;
+            margin-left: 1px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .affiliations {
+            text-align: center;
+            margin: 1rem 0 0;
+            padding-top: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .affiliations .affiliation {
+            display: inline-block;
+            margin: 0 0.75rem;
+        }
+
+        .affiliations .affiliation sup {
+            font-size: 0.6rem;
+            margin-right: 2px;
+            color: var(--text-muted);
+        }
+
+        .venue-line {
+            margin-top: 0.85rem;
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        /* ===== HEADER LINK BUTTONS ===== */
+        .header-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .header-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.25rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .header-btn svg { width: 18px; height: 18px; }
+
+        .header-btn:hover:not(.disabled) {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* ===== SECTIONS ===== */
+        section {
+            padding: var(--section-padding);
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+
+        .section-header { margin-bottom: 1.5rem; }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, var(--border-color) 20%, var(--border-color) 80%, transparent 100%);
+            margin: 0;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ===== ABSTRACT ===== */
+        #abstract {
+            padding-top: 3rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        #abstract .section-header {
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        #abstract .section-header h2.section-title::after {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .abstract {
+            text-align: justify;
+            line-height: 1.85;
+            font-size: 1.02rem;
+            font-family: 'Source Serif 4', Georgia, serif;
+            color: var(--text-secondary);
+        }
+
+        .abstract em {
+            font-style: italic;
+            color: var(--text-primary);
+        }
+
+        /* ===== PROSE ===== */
+        .prose {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 1rem;
+            line-height: 1.85;
+            color: var(--text-secondary);
+            text-align: justify;
+        }
+
+        .prose strong { color: var(--text-primary); }
+        .prose em { color: var(--text-primary); font-style: italic; }
+
+        /* ===== OUTLINE CARDS ===== */
+        .outline-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .outline-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 1.5rem 1.6rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .outline-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-color);
+        }
+
+        .outline-card .card-eyebrow {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 0.4rem;
+        }
+
+        .outline-card h3 {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 1.2rem;
+            margin-bottom: 0.6rem;
+            color: var(--text-primary);
+        }
+
+        .outline-card p {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .outline-card ul {
+            margin: 0.5rem 0 0 1.1rem;
+            padding: 0;
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .outline-card ul li { margin-bottom: 0.25rem; }
+        .outline-card ul li strong { color: var(--text-primary); }
+
+        /* ===== SCHEDULE ===== */
+        .schedule-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .schedule-table th,
+        .schedule-table td {
+            text-align: left;
+            padding: 0.85rem 1.1rem;
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 0.95rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .schedule-table th {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .schedule-table tbody tr:last-child td { border-bottom: none; }
+
+        .schedule-table .col-duration {
+            width: 110px;
+            color: var(--accent);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .schedule-table .col-part {
+            width: 110px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .schedule-table tr.break td {
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* ===== SPEAKERS ===== */
+        .speakers-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .speaker-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 1.5rem 1.5rem 1.4rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .speaker-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-color);
+        }
+
+        .speaker-avatar {
+            position: relative;
+            width: 112px;
+            height: 112px;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.02em;
+        }
+
+        .speaker-avatar img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .speaker-name {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.15rem;
+        }
+
+        .speaker-affil {
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 0.85rem;
+        }
+
+        .speaker-bio {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 0.92rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .speaker-links {
+            margin-top: 0.85rem;
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .speaker-link {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--border-color);
+            padding-bottom: 1px;
+            transition: var(--transition);
+        }
+
+        .speaker-link:hover {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        /* ===== REFERENCES ===== */
+        .references-list {
+            counter-reset: refnum;
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0 0;
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .references-list li {
+            counter-increment: refnum;
+            position: relative;
+            padding-left: 2.5rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .references-list li::before {
+            content: "[" counter(refnum) "]";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+        }
+
+        .references-list li strong { color: var(--text-primary); }
+
+        /* ===== AUDIENCE / MATERIALS BANNER ===== */
+        .info-callout {
+            background: var(--bg-card);
+            border-left: 3px solid var(--accent);
+            border-radius: 6px;
+            padding: 1.1rem 1.4rem;
+            margin-top: 1rem;
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 0.98rem;
+            line-height: 1.75;
+            color: var(--text-secondary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .info-callout strong { color: var(--text-primary); }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-subtle);
+            margin-top: 2rem;
+        }
+
+        .footer-content {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 2.5rem 2rem;
+            text-align: center;
+        }
+
+        .footer-text {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            line-height: 1.7;
+        }
+
+        .footer-text a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--accent);
+        }
+
+        .footer-text a:hover {
+            border-bottom-style: solid;
+        }
+
+        .footer-meta {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 0.75rem;
+        }
+
+        /* ===== SIDEBAR NAV ===== */
+        .sidebar-toggle {
+            display: flex;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            width: 44px;
+            height: 44px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+            transition: var(--transition);
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--bg-secondary);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .sidebar-toggle svg {
+            width: 22px;
+            height: 22px;
+            stroke: var(--text-primary);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .sidebar-toggle.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 260px;
+            background: var(--bg-primary);
+            border-right: 1px solid var(--border-subtle);
+            padding: 1.5rem 0;
+            z-index: 1000;
+            overflow-y: auto;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+        }
+
+        .sidebar.open { transform: translateX(0); }
+
+        .sidebar-header {
+            padding: 0.75rem 1.25rem 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-title {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .sidebar-close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .sidebar-close:hover { background: var(--bg-secondary); }
+        .sidebar-close svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-secondary);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-link {
+            display: block;
+            padding: 0.65rem 1.25rem;
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-link:hover {
+            color: var(--accent);
+            background: var(--bg-secondary);
+            border-left-color: var(--accent-light);
+        }
+
+        .sidebar-link.active {
+            color: var(--accent);
+            background: var(--bg-secondary);
+            border-left-color: var(--accent);
+            font-weight: 500;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .sidebar-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .outline-grid { grid-template-columns: 1fr; }
+            .speakers-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .schedule-table .col-part { display: none; }
+            .header-links { gap: 0.6rem; }
+            .header-btn { padding: 0.55rem 1rem; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar Navigation -->
+<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle navigation">
+    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+<nav class="sidebar">
+    <div class="sidebar-header">
+        <p class="sidebar-title">Navigation</p>
+        <button class="sidebar-close" onclick="toggleSidebar()" aria-label="Close navigation">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+    </div>
+    <ul class="sidebar-nav">
+        <li><a href="#top" class="sidebar-link" onclick="smoothScrollTo(event, 'top')">Top</a></li>
+        <li><a href="#abstract" class="sidebar-link" onclick="smoothScrollTo(event, 'abstract')">Abstract</a></li>
+        <li><a href="#outline" class="sidebar-link" onclick="smoothScrollTo(event, 'outline')">Outline</a></li>
+        <li><a href="#schedule" class="sidebar-link" onclick="smoothScrollTo(event, 'schedule')">Schedule</a></li>
+        <li><a href="#speakers" class="sidebar-link" onclick="smoothScrollTo(event, 'speakers')">Speakers</a></li>
+        <li><a href="#references" class="sidebar-link" onclick="smoothScrollTo(event, 'references')">References</a></li>
+    </ul>
+</nav>
+
+<header id="top">
+    <span class="venue-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        ECCV 2026 Tutorial · September 8 (PM)
+    </span>
+    <h1>Post-Training Diffusion Models: Enhancing Capabilities, Control, and Alignment</h1>
+    <div class="title-underline"></div>
+    <div class="authors">
+        <span class="author">Sayak Paul<sup>1</sup></span>
+        <span class="author">Linoy Tsaban<sup>1</sup></span>
+        <span class="author">Hila Chefer<sup>2</sup></span>
+    </div>
+    <div class="affiliations">
+        <span class="affiliation"><sup>1</sup>Hugging Face</span>
+        <span class="affiliation"><sup>2</sup>Black Forest Labs</span>
+    </div>
+    <div class="venue-line">
+        Half-day tutorial at the European Conference on Computer Vision (ECCV) 2026 — second half of the day. Exact event location and time will be updated here.
+    </div>
+    <div class="header-links">
+        <a href="mailto:spsayakpaul@gmail.com" class="header-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Contact
+        </a>
+        <a href="#" class="header-btn disabled">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            Slides &amp; Recording (coming soon)
+        </a>
+    </div>
+</header>
+
+<hr>
+
+<section id="abstract">
+    <div class="section-header">
+        <h2 class="section-title">Abstract</h2>
+    </div>
+    <div class="abstract">
+        Pre-trained generative models are built using massive, typically unlabeled corpora, enabling them to capture broad, generic knowledge across diverse domains. However, at inference time, we often aim to adjust and customize these models — to exert control, enhance specific capabilities, and align their behavior with user intent and preferences. Post-training techniques have therefore emerged as both a practical necessity and an accessible means of adapting these powerful, yet static, models. This tutorial surveys the state-of-the-art in post-training methods for diffusion models, analyzing their strengths, limitations, and areas of application. We conclude with a critical discussion on the boundaries of post-training — asking whether fundamental semantic malfunctions can truly be resolved <em>without</em> revisiting the pretraining process.
+    </div>
+</section>
+
+<hr>
+
+<section id="outline">
+    <div class="section-header">
+        <h2 class="section-title">Tutorial Outline</h2>
+    </div>
+    <p class="prose">
+        We start by motivating the gap between pre-training and post-training, drawing on seminal work such as DDPM [1] and Latent Diffusion Models [2]. We then cover three broad themes — <strong>Alignment</strong>, <strong>Enhancement</strong>, and <strong>Control</strong> — each complemented by implementation references and noteworthy literature for further study.
+    </p>
+
+    <div class="outline-grid">
+        <div class="outline-card">
+            <span class="card-eyebrow">Part 1</span>
+            <h3>Pre-Training vs. Post-Training</h3>
+            <p>A brief discussion on common pre-training methodologies of text-to-image diffusion models, and the practical motivation for post-training large pre-trained models. Sets up the three themes that organize the rest of the tutorial.</p>
+        </div>
+
+        <div class="outline-card">
+            <span class="card-eyebrow">Part 2</span>
+            <h3>Alignment</h3>
+            <p>What alignment means within the diffusion paradigm, and how it is implemented in contemporary base models. Three core dimensions:</p>
+            <ul>
+                <li><strong>Definition:</strong> alignment with preferences and human values.</li>
+                <li><strong>Safety, fairness, copyright:</strong> interpretability and concept inspection [3,4]; diffusion forgery and concept deletion [5,6].</li>
+                <li><strong>RLHF &amp; preference alignment:</strong> RL for diffusion [7], DPO [8], MaPO [9], online RL for flow matching [10].</li>
+            </ul>
+        </div>
+
+        <div class="outline-card">
+            <span class="card-eyebrow">Part 3</span>
+            <h3>Enhancement</h3>
+            <p>Improving capabilities beyond the original training scope, plus distillation to reduce denoising steps. Covers both inference-only and training-based techniques:</p>
+            <ul>
+                <li><strong>Inference time:</strong> StyleAlign [11], Attend-and-Excite [12], PAG [13], CFG-Zero* [14], HeadHunter [15], inference-time scaling [16,17,18].</li>
+                <li><strong>Training:</strong> fine-tuning for lighting, realism, style, faces [19,20]; distillation for step and CFG reduction [21,22].</li>
+            </ul>
+        </div>
+
+        <div class="outline-card">
+            <span class="card-eyebrow">Part 4</span>
+            <h3>Control</h3>
+            <p>Structural control beyond natural language, plus emerging in-context-learning approaches for image generation:</p>
+            <ul>
+                <li><strong>Inference time:</strong> OmniGen [23] and related architectures.</li>
+                <li><strong>Training:</strong> OminiControl [24], Ctrl-Adapter [25], Flux Control [26], ControlNet [27].</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<hr>
+
+<section id="schedule">
+    <div class="section-header">
+        <h2 class="section-title">Format &amp; Schedule</h2>
+    </div>
+    <p class="prose">
+        A <strong>half-day</strong> event in the second half of <strong>September 8, 2026</strong>. Indicative breakdown:
+    </p>
+    <table class="schedule-table">
+        <thead>
+            <tr>
+                <th class="col-part">Part</th>
+                <th>Topic</th>
+                <th class="col-duration">Duration</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="col-part">Part 1</td>
+                <td>Pre-training vs. post-training — motivation and overview</td>
+                <td class="col-duration">45 min</td>
+            </tr>
+            <tr>
+                <td class="col-part">Part 2</td>
+                <td>Alignment — definitions, safety, fairness, RLHF</td>
+                <td class="col-duration">45 min</td>
+            </tr>
+            <tr class="break">
+                <td class="col-part">Break</td>
+                <td>Coffee &amp; networking</td>
+                <td class="col-duration">15 min</td>
+            </tr>
+            <tr>
+                <td class="col-part">Part 3</td>
+                <td>Enhancement — inference-time and training-based techniques</td>
+                <td class="col-duration">45 min</td>
+            </tr>
+            <tr>
+                <td class="col-part">Part 4</td>
+                <td>Control — structural control and in-context learning</td>
+                <td class="col-duration">45 min</td>
+            </tr>
+            <tr>
+                <td class="col-part">Q&amp;A</td>
+                <td>Open discussion on the boundaries of post-training</td>
+                <td class="col-duration">15 min</td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<hr>
+
+<section id="speakers">
+    <div class="section-header">
+        <h2 class="section-title">Speakers</h2>
+    </div>
+    <div class="speakers-grid">
+        <div class="speaker-card">
+            <div class="speaker-avatar" aria-hidden="true">
+                SP
+                <img src="https://sayak.dev/posts/carted_headshot.jpg" alt="Sayak Paul" onerror="this.style.display='none'">
+            </div>
+            <div class="speaker-name">Sayak Paul</div>
+            <div class="speaker-affil">Hugging Face</div>
+            <div class="speaker-bio">
+                Research Engineer at Hugging Face working on image and video generation, with a focus on controllability and inference-time scaling for diffusion models. His research includes ReflectionFlow [28] (reflection in diffusion models) and MaPO [9] (reference-mismatch in diffusion alignment). Co-maintains the <strong>Diffusers</strong> library.
+            </div>
+            <div class="speaker-links">
+                <a href="https://sayak.dev" class="speaker-link" target="_blank">Website</a>
+            </div>
+        </div>
+
+        <div class="speaker-card">
+            <div class="speaker-avatar" aria-hidden="true">
+                LT
+                <img src="https://avatars.githubusercontent.com/u/57615435?v=4" alt="Linoy Tsaban" onerror="this.style.display='none'">
+            </div>
+            <div class="speaker-name">Linoy Tsaban</div>
+            <div class="speaker-affil">Hugging Face</div>
+            <div class="speaker-bio">
+                Machine Learning Engineer at Hugging Face working at the intersection of AI and the arts, with a focus on image and video diffusion models. She contributes fine-tuning and inference-time control pipelines to <strong>Diffusers</strong>, and co-authored LEDITS and LEDITS++ (spotlight at NeurIPS'23; CVPR'24). She has organized a generative AI meetup attended by over 500 people.
+            </div>
+            <div class="speaker-links">
+                <a href="https://il.linkedin.com/in/linoy-tsaban-8762511b1" class="speaker-link" target="_blank">Website</a>
+            </div>
+        </div>
+
+        <div class="speaker-card">
+            <div class="speaker-avatar" aria-hidden="true">
+                HC
+                <img src="https://hila-chefer.github.io/images/hilac.jpeg" alt="Hila Chefer" onerror="this.style.display='none'">
+            </div>
+            <div class="speaker-name">Hila Chefer</div>
+            <div class="speaker-affil">Black Forest Labs</div>
+            <div class="speaker-bio">
+                Researcher working on interpretability, controllability, and alignment of generative vision models. Her work on attention-based semantic guidance for diffusion models (Attend-and-Excite [12]) and concept representation [3] underpins several of the inference-time and alignment techniques covered in this tutorial.
+            </div>
+            <div class="speaker-links">
+                <a href="https://hila-chefer.github.io/" class="speaker-link" target="_blank">Website</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr>
+
+<section id="references">
+    <div class="section-header">
+        <h2 class="section-title">References</h2>
+    </div>
+    <ol class="references-list">
+        <li>Ho, J., Jain, A., Abbeel, P. <strong>Denoising diffusion probabilistic models.</strong> NeurIPS 2020.</li>
+        <li>Rombach, R., Blattmann, A., Lorenz, D., Esser, P., Ommer, B. <strong>High-resolution image synthesis with latent diffusion models.</strong> CVPR 2022.</li>
+        <li>Chefer, H., et al. <strong>Concept representation and inspection in diffusion models.</strong> 2024.</li>
+        <li>Carlini, N., et al. <strong>Extracting training data from diffusion models.</strong> 2023.</li>
+        <li>Somepalli, G., et al. <strong>Diffusion art or digital forgery? Investigating data replication in diffusion models.</strong> CVPR 2023.</li>
+        <li>Gandikota, R., et al. <strong>Erasing concepts from diffusion models.</strong> ICCV 2023.</li>
+        <li>Black, K., Janner, M., Du, Y., Kostrikov, I., Levine, S. <strong>Training diffusion models with reinforcement learning.</strong> ICLR 2024.</li>
+        <li>Wallace, B., et al. <strong>Diffusion model alignment using direct preference optimization.</strong> CVPR 2024.</li>
+        <li>Hong, J., Paul, S., Lee, N., Rasul, K., Thorne, J., Jeong, J. <strong>Margin-aware preference optimization for aligning diffusion models without reference.</strong> 2024.</li>
+        <li>Liu, J., et al. <strong>Flow-GRPO: Training flow matching models via online RL.</strong> 2025.</li>
+        <li>Hertz, A., Voynov, A., Fruchter, S., Cohen-Or, D. <strong>Style aligned image generation via shared attention.</strong> CVPR 2024.</li>
+        <li>Chefer, H., Alaluf, Y., Vinker, Y., Wolf, L., Cohen-Or, D. <strong>Attend-and-excite: Attention-based semantic guidance for text-to-image diffusion models.</strong> ACM SIGGRAPH 2023.</li>
+        <li>Ahn, D., et al. <strong>Self-rectifying diffusion sampling with perturbed-attention guidance.</strong> ECCV 2024.</li>
+        <li>Fan, W., Zheng, A.Y., Yeh, R.A., Liu, Z. <strong>CFG-Zero*: Improved classifier-free guidance for flow matching models.</strong> 2025.</li>
+        <li>Ahn, D., et al. <strong>HeadHunter.</strong> 2025.</li>
+        <li>Ma, N., et al. <strong>Inference-time scaling for diffusion models.</strong> 2025.</li>
+        <li>Singhal, R., et al. <strong>Inference-time scaling for diffusion models.</strong> 2025.</li>
+        <li>Zhuo, L., et al. <strong>Inference-time scaling for diffusion models.</strong> 2025.</li>
+        <li>Zhang, L., et al. <strong>Fine-tuning diffusion models for improved generation quality.</strong> 2025.</li>
+        <li>Li, Y., et al. <strong>Fine-tuning diffusion models for improved generation quality.</strong> 2025.</li>
+        <li>Sauer, A., et al. <strong>Adversarial diffusion distillation.</strong> CVPR 2024.</li>
+        <li>Chen, X., et al. <strong>Distillation for diffusion models.</strong> 2025.</li>
+        <li>Xiao, S., et al. <strong>OmniGen: Unified image generation.</strong> 2024.</li>
+        <li>Tan, Z., et al. <strong>OminiControl: Minimal and universal control for diffusion transformer.</strong> 2024.</li>
+        <li>Lin, H., et al. <strong>Ctrl-Adapter: An efficient and versatile framework for adapting diverse controls to any diffusion model.</strong> 2024.</li>
+        <li>Black Forest Labs. <strong>Flux Control.</strong> 2024.</li>
+        <li>Zhang, L., Rao, A., Agrawala, M. <strong>Adding conditional control to text-to-image diffusion models.</strong> ICCV 2023.</li>
+        <li>Zhuo, L., Zhao, L., Paul, S., et al. <strong>From reflection to perfection: Scaling inference-time optimization for text-to-image diffusion models via reflection tuning.</strong> ICCV 2025.</li>
+    </ol>
+</section>
+
+<footer>
+    <div class="footer-content">
+        <p class="footer-text">
+            The visual design of this page is adapted from the <a href="https://black-forest-labs.github.io/Self-Flow/" target="_blank" rel="noopener">Self-Flow</a> project page by Black Forest Labs.
+        </p>
+        <p class="footer-text">
+            For questions about the tutorial, please reach out via <a href="mailto:spsayakpaul@gmail.com">email</a>.
+        </p>
+        <p class="footer-meta">
+            &copy; 2026 · Post-Training Diffusion Models Tutorial · ECCV 2026
+        </p>
+    </div>
+</footer>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        const toggle = document.querySelector('.sidebar-toggle');
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('open');
+        toggle.classList.toggle('hidden');
+    }
+
+    function smoothScrollTo(event, id) {
+        event.preventDefault();
+        const target = document.getElementById(id);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (window.innerWidth < 1024) toggleSidebar();
+        }
+    }
+
+    // Scroll-spy: highlight current section in sidebar
+    const sections = document.querySelectorAll('section[id], header[id]');
+    const links = document.querySelectorAll('.sidebar-link');
+    const linkById = {};
+    links.forEach(l => {
+        const href = l.getAttribute('href');
+        if (href && href.startsWith('#')) linkById[href.slice(1)] = l;
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const id = entry.target.id;
+            const link = linkById[id];
+            if (!link) return;
+            if (entry.isIntersecting) {
+                links.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+
+    sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
